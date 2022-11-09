@@ -1,11 +1,12 @@
 class Encoder {
     private static final String HELLO_WORLD = "HELLO WORLD";
     private static final String REFERENCE_STRING = createReferenceTableString();
+    private char firstCharacter;
 
     public String encode(String plainText) {
         char startingCharacter = plainText.charAt(0);
-        int offsetNumber = (startingCharacter - 'A') - 1;
-        String offsetString = padLeft(Encoder.createOffsetString(), startingCharacter);
+        setFirstCharacter(startingCharacter);
+        String offsetString = rotate(Encoder.createOffsetString(), startingCharacter);
         StringBuilder output = new StringBuilder();
         for (int i = 0; i < plainText.length(); ++i) {
             char letter = plainText.charAt(i);
@@ -19,7 +20,21 @@ class Encoder {
     }
 
     public String decode(String encodedText) {
-        return "";
+        String offsetString = rotate(Encoder.createOffsetString(), firstCharacter);
+        StringBuilder output = new StringBuilder();
+        for (int i = 0; i < encodedText.length(); ++i) {
+            char letter = encodedText.charAt(i);
+            if (letter == ' ') {
+                output.append(' ');
+            } else {
+                output.append(REFERENCE_STRING.charAt(offsetString.indexOf(letter)));
+            }
+        }
+        return output.toString();
+    }
+
+    private void setFirstCharacter(char firstCharacter) {
+        this.firstCharacter = firstCharacter;
     }
 
     private static String createOffsetString() {
@@ -60,13 +75,18 @@ class Encoder {
         return characterSb.toString();
     }
 
-    private String padLeft(String offsetString, char startingCharacter) {
-        return String.format("%" + (startingCharacter - 'A' - 1) + 's', "") + offsetString.trim();
+    private String rotate(String offsetString, char startingCharacter) {
+        int positionStart = REFERENCE_STRING.indexOf(startingCharacter);
+        while (offsetString.indexOf('A') != positionStart) {
+            offsetString = offsetString.substring(offsetString.length() - 1)
+                    + offsetString.substring(0, offsetString.length() - 1);
+        }
+        return offsetString;
     }
 
     public static void main(String[] args) {
-        String offsetString = Encoder.createOffsetString();
         Encoder encoder = new Encoder();
         System.out.println(encoder.encode(HELLO_WORLD));
+        System.out.println(encoder.decode(encoder.encode(HELLO_WORLD)));
     }
 }
